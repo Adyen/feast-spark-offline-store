@@ -1,0 +1,23 @@
+__pycahe__/*
+# Virtual evironments
+1_*/
+venv
+# Hidden files
+*.pyc
+.idea/
+/results.xml
+.hypothesis/
+buildvenv/
+
+
+build/
+dist/
+*.egg-info
+wheels/
+
+
+#
+output
+*/data/*
+derby.log
+metastore_db/
