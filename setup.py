@@ -29,6 +29,7 @@ setup(
     description="Spark support for Feast offline store",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
+    url="https://github.com/Adyen/feast-spark-offline-store",
     license="MIT",
     python_requires=">=3.7.0",
     packages=find_packages(include=["feast_spark_offline_store"]),
