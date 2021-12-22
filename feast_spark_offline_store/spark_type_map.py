@@ -33,17 +33,16 @@ def spark_schema_to_np_dtypes(dtypes: List[Tuple[str, str]]) -> Iterator[dtype]:
     # TODO recheck all typing (also tz for timestamp)
     # https://spark.apache.org/docs/latest/api/python/user_guide/arrow_pandas.html#timestamp-with-time-zone-semantics
 
-    type_map = defaultdict(
-        lambda: dtype("O"),
-        {
-            "boolean": dtype("bool"),
-            "double": dtype("float64"),
-            "float": dtype("float64"),
-            "int": dtype("int64"),
-            "bigint": dtype("int64"),
-            "smallint": dtype("int64"),
-            "timestamp": dtype("datetime64[ns]"),
-        },
-    )
+    type_map = defaultdict(lambda: dtype("O"), {
+        'boolean': dtype('bool'),
+        'double': dtype('float64'),
+        'float': dtype('float64'),
+        'int': dtype('int64'),
+        'bigint': dtype('int64'),
+        'smallint': dtype('int64'),
+        'timestamp': dtype('datetime64[ns]')
+    })
 
     return (type_map[t] for _, t in dtypes)
+
+
