@@ -11,18 +11,18 @@ from feast.errors import DataSourceNotFoundException
 
 class SparkSource(DataSource):
     def __init__(
-            self,
-            table: Optional[str] = None,
-            query: Optional[str] = None,
-            # TODO support file readers
-            # path: Optional[str] = None,
-            # jdbc=None,
-            # format: Optional[str] = None,
-            # options: Optional[Dict[str, Any]] = None,
-            event_timestamp_column: Optional[str] = None,
-            created_timestamp_column: Optional[str] = None,
-            field_mapping: Optional[Dict[str, str]] = None,
-            date_partition_column: Optional[str] = None,
+        self,
+        table: Optional[str] = None,
+        query: Optional[str] = None,
+        # TODO support file readers
+        # path: Optional[str] = None,
+        # jdbc=None,
+        # format: Optional[str] = None,
+        # options: Optional[Dict[str, Any]] = None,
+        event_timestamp_column: Optional[str] = None,
+        created_timestamp_column: Optional[str] = None,
+        field_mapping: Optional[Dict[str, str]] = None,
+        date_partition_column: Optional[str] = None,
     ):
         super().__init__(
             event_timestamp_column,
@@ -112,11 +112,20 @@ class SparkSource(DataSource):
     def get_table_column_names_and_types(
         self, config: RepoConfig
     ) -> Iterable[Tuple[str, str]]:
-        from feast_spark_offline_store.spark import get_spark_session_or_start_new_with_repoconfig
-        spark_session = get_spark_session_or_start_new_with_repoconfig(config.offline_store)
+        from feast_spark_offline_store.spark import (
+            get_spark_session_or_start_new_with_repoconfig,
+        )
+
+        spark_session = get_spark_session_or_start_new_with_repoconfig(
+            config.offline_store
+        )
         try:
-            return ((fields['name'], fields['type'])
-                    for fields in spark_session.table(self.table).schema.jsonValue()["fields"])
+            return (
+                (fields["name"], fields["type"])
+                for fields in spark_session.table(self.table).schema.jsonValue()[
+                    "fields"
+                ]
+            )
         except AnalysisException:
             raise DataSourceNotFoundException(self.table)
 

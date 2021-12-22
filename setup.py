@@ -9,18 +9,12 @@ INSTALL_REQUIRES = [
     "numpy",
     "pandas",
     "pytz>=2021.3",
-    "pydantic>=1.6"
+    "pydantic>=1.6",
 ]
 
-DEV_REQUIRES = INSTALL_REQUIRES + [
-    "wheel",
-    "black"
-]
+DEV_REQUIRES = INSTALL_REQUIRES + ["wheel", "black"]
 
-TEST_REQUIRES = INSTALL_REQUIRES + [
-    "pytest>=6.2.5",
-    "google"
-]
+TEST_REQUIRES = INSTALL_REQUIRES + ["pytest>=6.2.5", "google"]
 
 setup(
     name="feast_spark_offline_store",
