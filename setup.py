@@ -29,7 +29,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/Adyen/feast-spark-offline-store",
     license="MIT",
-    python_requires=">=3.7.0",
+    python_requires=">=3.8.0",
     packages=find_packages(include=["feast_spark_offline_store"]),
     install_requires=INSTALL_REQUIRES,
     extras_require={"dev": DEV_REQUIRES},
