@@ -12,9 +12,13 @@ INSTALL_REQUIRES = [
     "pydantic>=1.6",
 ]
 
-DEV_REQUIRES = INSTALL_REQUIRES + ["wheel", "black"]
-
-TEST_REQUIRES = INSTALL_REQUIRES + ["pytest>=6.2.5", "google"]
+DEV_REQUIRES = INSTALL_REQUIRES + [
+    "wheel",
+    "black",
+    "flake8",
+    "pytest>=6.2.5",
+    "google",
+]
 
 setup(
     name="feast_spark_offline_store",
@@ -27,15 +31,6 @@ setup(
     license="MIT",
     python_requires=">=3.7.0",
     packages=find_packages(include=["feast_spark_offline_store"]),
-    test_requires=TEST_REQUIRES,
     install_requires=INSTALL_REQUIRES,
-    extras_require={
-        "dev": DEV_REQUIRES + TEST_REQUIRES,
-        "test": TEST_REQUIRES,
-    },
-    package_data={
-        "feast_spark_offline_store": [
-            "multiple_feature_view_point_in_time_join.sql",
-        ],
-    },
+    extras_require={"dev": DEV_REQUIRES},
 )
