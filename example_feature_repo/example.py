@@ -1,4 +1,3 @@
-
 # This is an example feature definition file
 
 from google.protobuf.duration_pb2 import Duration
@@ -29,7 +28,11 @@ driver_hourly_stats = SparkSource(
 )
 
 # Define an entity for the driver.
-driver = Entity(name="driver_id", value_type=ValueType.INT64, description="driver id", )
+driver = Entity(
+    name="driver_id",
+    value_type=ValueType.INT64,
+    description="driver id",
+)
 
 # Define FeatureView
 driver_hourly_stats_view = FeatureView(

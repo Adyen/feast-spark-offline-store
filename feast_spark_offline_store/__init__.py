@@ -9,4 +9,9 @@ except DistributionNotFound:
     # package is not installed
     pass
 
-__all__ = ["SparkOptions", "SparkSource", "SparkOfflineStoreConfig", "SparkOfflineStore"]
+__all__ = [
+    "SparkOptions",
+    "SparkSource",
+    "SparkOfflineStoreConfig",
+    "SparkOfflineStore",
+]
