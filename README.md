@@ -17,7 +17,7 @@ Or to install from source:
 ```bash
 git clone git@github.com:Adyen/feast-spark-offline-store.git
 cd feast-spark-offline-store
-pip install -e .[dev]
+pip install -e '.[dev]'
 ```
 
 ## Usage

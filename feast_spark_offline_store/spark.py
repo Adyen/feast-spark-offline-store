@@ -45,7 +45,9 @@ class SparkOfflineStore(OfflineStore):
         start_date: datetime,
         end_date: datetime,
     ) -> RetrievalJob:
-        spark_session = get_spark_session_or_start_new_with_repoconfig(config.offline_store)
+        spark_session = get_spark_session_or_start_new_with_repoconfig(
+            config.offline_store
+        )
 
         assert isinstance(config.offline_store, SparkOfflineStoreConfig)
         assert isinstance(data_source, SparkSource)
@@ -83,7 +85,7 @@ class SparkOfflineStore(OfflineStore):
             spark_session=spark_session,
             query=query,
             full_feature_names=False,
-            on_demand_feature_views=None
+            on_demand_feature_views=None,
         )
 
     @staticmethod
@@ -98,7 +100,9 @@ class SparkOfflineStore(OfflineStore):
     ) -> RetrievalJob:
         assert isinstance(config.offline_store, SparkOfflineStoreConfig)
 
-        spark_session = get_spark_session_or_start_new_with_repoconfig(config.offline_store)
+        spark_session = get_spark_session_or_start_new_with_repoconfig(
+            config.offline_store
+        )
 
         table_name = offline_utils.get_temp_entity_table_name()
 
@@ -106,8 +110,8 @@ class SparkOfflineStore(OfflineStore):
             spark_session, table_name, entity_df
         )
 
-        entity_df_event_timestamp_col = offline_utils.infer_event_timestamp_from_entity_df(
-            entity_schema
+        entity_df_event_timestamp_col = (
+            offline_utils.infer_event_timestamp_from_entity_df(entity_schema)
         )
 
         expected_join_keys = offline_utils.get_expected_join_keys(
@@ -119,7 +123,10 @@ class SparkOfflineStore(OfflineStore):
         )
 
         query_context = offline_utils.get_feature_view_query_context(
-            feature_refs, feature_views, registry, project,
+            feature_refs,
+            feature_views,
+            registry,
+            project,
         )
 
         query = offline_utils.build_point_in_time_query(
@@ -164,7 +171,9 @@ class SparkRetrievalJob(RetrievalJob):
         return self._on_demand_feature_views
 
     def to_spark_df(self) -> pyspark.sql.DataFrame:
-        statements = self.query.split("---EOS---")  # TODO can do better than this dirty split
+        statements = self.query.split(
+            "---EOS---"
+        )  # TODO can do better than this dirty split
         *_, last = map(self.spark_session.sql, statements)
         return last
 
@@ -185,9 +194,7 @@ class SparkRetrievalJob(RetrievalJob):
 
 
 def _upload_entity_df_and_get_entity_schema(
-        spark_session,
-        table_name,
-        entity_df
+    spark_session, table_name, entity_df
 ) -> Dict[str, np.dtype]:
     if isinstance(entity_df, pd.DataFrame):
         spark_session.createDataFrame(entity_df).createOrReplaceTempView(table_name)
@@ -197,12 +204,19 @@ def _upload_entity_df_and_get_entity_schema(
         limited_entity_df = spark_session.table(table_name)
         # limited_entity_df = spark_session.table(table_name).limit(1).toPandas()
 
-        return dict(zip(limited_entity_df.columns, spark_schema_to_np_dtypes(limited_entity_df.dtypes)))
+        return dict(
+            zip(
+                limited_entity_df.columns,
+                spark_schema_to_np_dtypes(limited_entity_df.dtypes),
+            )
+        )
     else:
         raise InvalidEntityType(type(entity_df))
 
 
-def get_spark_session_or_start_new_with_repoconfig(store_config: SparkOfflineStoreConfig) -> SparkSession:
+def get_spark_session_or_start_new_with_repoconfig(
+    store_config: SparkOfflineStoreConfig,
+) -> SparkSession:
     spark_session = SparkSession.getActiveSession()
 
     if not spark_session:
@@ -210,11 +224,15 @@ def get_spark_session_or_start_new_with_repoconfig(store_config: SparkOfflineSto
         spark_conf = store_config.spark_conf
 
         if spark_conf:
-            spark_builder = spark_builder.config(conf=SparkConf().setAll(spark_conf.items())) # noqa
+            spark_builder = spark_builder.config(
+                conf=SparkConf().setAll(spark_conf.items())
+            )  # noqa
 
         spark_session = spark_builder.getOrCreate()
 
-    spark_session.conf.set("spark.sql.parser.quotedRegexColumnNames", "true")  # important!
+    spark_session.conf.set(
+        "spark.sql.parser.quotedRegexColumnNames", "true"
+    )  # important!
 
     return spark_session
 
