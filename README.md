@@ -8,7 +8,7 @@ It can be installed from pip and configured in the `feature_store.yaml` configur
 We strongly encourage you to contribute to our repository. Find out more in our [contribution guidelines](https://github.com/Adyen/.github/blob/master/CONTRIBUTING.md)
 
 ## Requirements
-Currently only supports Feast version `0.14.1`.
+Currently only supports Feast versions `>=0.15.0`.
 
 ## Installation
 `pip install feast-spark-offline-store` 

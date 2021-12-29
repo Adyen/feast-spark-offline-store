@@ -3,7 +3,7 @@ from distutils.core import setup
 from setuptools import find_packages
 
 INSTALL_REQUIRES = [
-    "feast==0.14.1",
+    "feast>=0.15.0",
     "pyspark>=3.0",
     "pyarrow>=1.0.0",
     "numpy",
