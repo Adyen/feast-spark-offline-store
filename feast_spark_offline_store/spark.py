@@ -345,10 +345,11 @@ ON (
     {% endfor %}
 );
 
+---EOS---
+
 {% endfor %}
 -- End create temporary table *__base
 
----EOS---
 
 {% for featureview in featureviews %}
 
