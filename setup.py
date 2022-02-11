@@ -22,7 +22,7 @@ DEV_REQUIRES = INSTALL_REQUIRES + [
 
 setup(
     name="feast_spark_offline_store",
-    version="0.0.3",
+    version="0.0.4",
     author="Thijs Brits",
     description="Spark support for Feast offline store",
     long_description=open("README.md").read(),
