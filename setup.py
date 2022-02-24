@@ -33,5 +33,5 @@ setup(
     packages=find_packages(include=["feast_spark_offline_store"]),
     install_requires=INSTALL_REQUIRES,
     extras_require={"dev": DEV_REQUIRES},
-    setup_requires=['setuptools_scm'],
+    setup_requires=["setuptools_scm"],
 )
