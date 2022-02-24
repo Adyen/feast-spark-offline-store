@@ -12,15 +12,13 @@ from example_feature_repo.example import (
 )
 
 
-def test_end_to_end_one_feature_view():
-    fs = FeatureStore("example_feature_repo/")
-
+def test_end_to_end_one_feature_view(feature_store: FeatureStore):
     try:
         # apply repository
-        fs.apply([driver, driver_hourly_stats_view])
+        feature_store.apply([driver, driver_hourly_stats_view])
 
         # load data into online store (uses offline stores pull_latest_from_table_or_query)
-        fs.materialize_incremental(end_date=datetime.now())
+        feature_store.materialize_incremental(end_date=datetime.now())
 
         entity_df = pd.DataFrame(
             {"driver_id": [1001], "event_timestamp": [datetime.now()]}
@@ -28,7 +26,7 @@ def test_end_to_end_one_feature_view():
 
         # Read features from offline store
         feature_vector = (
-            fs.get_historical_features(
+            feature_store.get_historical_features(
                 features=["driver_hourly_stats:conv_rate"], entity_df=entity_df
             )
             .to_df()
@@ -38,20 +36,18 @@ def test_end_to_end_one_feature_view():
         assert conv_rate > 0
     finally:
         # tear down feature store
-        fs.teardown()
+        feature_store.teardown()
 
 
-def test_end_to_end_multiple_feature_views():
-    fs = FeatureStore("example_feature_repo/")
-
+def test_end_to_end_multiple_feature_views(feature_store: FeatureStore):
     try:
         # apply repository
-        fs.apply(
+        feature_store.apply(
             [driver, driver_hourly_stats_view, customer, customer_daily_profile_view]
         )
 
         # load data into online store (uses offline stores pull_latest_from_table_or_query)
-        fs.materialize_incremental(end_date=datetime.now())
+        feature_store.materialize_incremental(end_date=datetime.now())
 
         entity_df = pd.DataFrame(
             {
@@ -63,7 +59,7 @@ def test_end_to_end_multiple_feature_views():
 
         # Read features from offline store
         feature_vector = (
-            fs.get_historical_features(
+            feature_store.get_historical_features(
                 features=[
                     "driver_hourly_stats:conv_rate",
                     "customer_daily_profile:lifetime_trip_count",
@@ -81,11 +77,11 @@ def test_end_to_end_multiple_feature_views():
 
     finally:
         # tear down feature store
-        fs.teardown()
+        feature_store.teardown()
 
 
-def test_cli():
-    repo_name = "example_feature_repo"
+def test_cli(feature_store: FeatureStore):
+    repo_name = feature_store.repo_path
     os.system(f"PYTHONPATH=$PYTHONPATH:/$(pwd) feast -c {repo_name} apply")
     try:
         os.system(
