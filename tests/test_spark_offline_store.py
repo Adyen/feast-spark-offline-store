@@ -85,10 +85,11 @@ def test_cli(feature_store: FeatureStore):
     os.system(f"PYTHONPATH=$PYTHONPATH:/$(pwd) feast -c {repo_name} apply")
     try:
         os.system(
-            f"PYTHONPATH=$PYTHONPATH:/$(pwd) feast -c {repo_name} materialize-incremental 2021-08-19T22:29:28 > output"
+            f"PYTHONPATH=$PYTHONPATH:/$(pwd) feast -c {repo_name} "
+            f"materialize-incremental 2021-08-19T22:29:28 > {repo_name}/output"
         )
 
-        with open("output", "r") as f:
+        with open(f"{repo_name}/output", "r") as f:
             output = f.read()
 
         if "Pulling latest features from spark offline store" not in output:
