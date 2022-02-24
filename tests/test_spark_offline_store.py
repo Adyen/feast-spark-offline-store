@@ -4,7 +4,12 @@ from datetime import datetime
 
 from feast import FeatureStore
 
-from example_feature_repo.example import driver, driver_hourly_stats_view, customer, customer_daily_profile_view
+from example_feature_repo.example import (
+    driver,
+    driver_hourly_stats_view,
+    customer,
+    customer_daily_profile_view,
+)
 
 
 def test_end_to_end_one_feature_view():
@@ -41,20 +46,29 @@ def test_end_to_end_multiple_feature_views():
 
     try:
         # apply repository
-        fs.apply([driver, driver_hourly_stats_view, customer, customer_daily_profile_view])
+        fs.apply(
+            [driver, driver_hourly_stats_view, customer, customer_daily_profile_view]
+        )
 
         # load data into online store (uses offline stores pull_latest_from_table_or_query)
         fs.materialize_incremental(end_date=datetime.now())
 
         entity_df = pd.DataFrame(
-            {"driver_id": [1001], "customer_id": [201], "event_timestamp": [datetime.now()]}
+            {
+                "driver_id": [1001],
+                "customer_id": [201],
+                "event_timestamp": [datetime.now()],
+            }
         )
 
         # Read features from offline store
         feature_vector = (
             fs.get_historical_features(
-                features=["driver_hourly_stats:conv_rate", "customer_daily_profile:lifetime_trip_count"],
-                entity_df=entity_df
+                features=[
+                    "driver_hourly_stats:conv_rate",
+                    "customer_daily_profile:lifetime_trip_count",
+                ],
+                entity_df=entity_df,
             )
             .to_df()
             .to_dict()

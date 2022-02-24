@@ -116,9 +116,7 @@ class SparkOfflineStore(OfflineStore):
             entity_schema=entity_schema,
         )
         expected_join_keys = offline_utils.get_expected_join_keys(
-            project=project,
-            feature_views=feature_views,
-            registry=registry
+            project=project, feature_views=feature_views, registry=registry
         )
         offline_utils.assert_expected_columns_in_entity_df(
             entity_schema=entity_schema,
@@ -133,7 +131,7 @@ class SparkOfflineStore(OfflineStore):
             spark_session=spark_session,
             table_name=tmp_entity_df_table_name,
             project=project,
-            registry=registry
+            registry=registry,
         )
         query = offline_utils.build_point_in_time_query(
             feature_view_query_contexts=query_context,
@@ -144,9 +142,7 @@ class SparkOfflineStore(OfflineStore):
             full_feature_names=full_feature_names,
         )
         on_demand_feature_views = OnDemandFeatureView.get_requested_odfvs(
-            feature_refs=feature_refs,
-            project=project,
-            registry=registry
+            feature_refs=feature_refs, project=project, registry=registry
         )
 
         return SparkRetrievalJob(
@@ -164,7 +160,7 @@ class SparkOfflineStore(OfflineStore):
         feature_name_columns: List[str],
         event_timestamp_column: str,
         start_date: datetime,
-        end_date: datetime
+        end_date: datetime,
     ) -> RetrievalJob:
         pass
 
@@ -289,7 +285,9 @@ def _get_entity_df_event_timestamp_range(
             FROM {table_name}
             """
         ).collect()
-        assert len(result) == 1, "Could not extract event timestamp range, perhaps entity_df is empty?"
+        assert (
+            len(result) == 1
+        ), "Could not extract event timestamp range, perhaps entity_df is empty?"
         entity_df_event_timestamp_range = (
             result[0]["min"],
             result[0]["max"],
@@ -323,9 +321,7 @@ def _get_feature_view_query_context(
     project: str,
 ) -> List[FeatureViewQueryContext]:
     # interface of offline_utils.get_feature_view_query_context changed in feast==0.17
-    arg_spec = inspect.getfullargspec(
-        func=offline_utils.get_feature_view_query_context
-    )
+    arg_spec = inspect.getfullargspec(func=offline_utils.get_feature_view_query_context)
     if "entity_df_timestamp_range" in arg_spec.args:
         # for feast>=0.17
         entity_df_timestamp_range = _get_entity_df_event_timestamp_range(

@@ -6,7 +6,10 @@ from feast import Entity, Feature, FeatureView, ValueType
 from feast_spark_offline_store import SparkSource
 from pyspark.sql import SparkSession
 from datetime import datetime, timedelta
-from feast.driver_test_data import create_driver_hourly_stats_df, create_customer_daily_profile_df
+from feast.driver_test_data import (
+    create_driver_hourly_stats_df,
+    create_customer_daily_profile_df,
+)
 
 # # we are loading a sparksession here, but should be configurable in the yaml
 spark = SparkSession.builder.getOrCreate()
@@ -81,4 +84,3 @@ customer_daily_profile_view = FeatureView(
     batch_source=customer_daily_stats,
     tags={},
 )
-
