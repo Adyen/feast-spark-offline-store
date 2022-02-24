@@ -18,8 +18,7 @@ from feast_spark_offline_store import SparkSource
 spark = SparkSession.builder.getOrCreate()
 
 # Create some temp tables, normally these would registered hive tables
-
-end_date = datetime.now(tz="UTC").replace(microsecond=0, second=0, minute=0)
+end_date = datetime.now().replace(microsecond=0, second=0, minute=0)
 start_date = end_date - timedelta(days=15)
 
 driver_entities = [1001, 1002, 1003, 1004, 1005]
