@@ -2,11 +2,13 @@
 This repo contains a plugin for [feast](https://github.com/feast-dev/feast) to run an offline store on Spark. 
 It can be installed from pip and configured in the `feature_store.yaml` configuration file to interface with `DataSources` using Spark.
 
+> Note that this repository has not yet had a major release as it is still work in progress.
+
 ## Contributing
 We strongly encourage you to contribute to our repository. Find out more in our [contribution guidelines](https://github.com/Adyen/.github/blob/master/CONTRIBUTING.md)
 
 ## Requirements
-Currently only supports Feast version `0.14.1`.
+Currently only supports Feast versions `>=0.15.0`.
 
 ## Installation
 `pip install feast-spark-offline-store` 
@@ -40,9 +42,6 @@ offline_store:
 
 ## Documentation
 See Feast documentation on [offline stores](https://docs.feast.dev/getting-started/architecture-and-components/offline-store) and [adding custom offline stores](https://docs.feast.dev/how-to-guides/adding-a-new-offline-store). 
-
-## Support
-If you have a feature request, or spotted a bug or a technical problem, create a GitHub issue. For other questions, contact our [support team](https://support.adyen.com/hc/en-us/requests/new?ticket_form_id=360000705420).    
 
 ## License    
 MIT license. For more information, see the LICENSE file.
