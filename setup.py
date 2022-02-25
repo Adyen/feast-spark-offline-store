@@ -22,8 +22,8 @@ DEV_REQUIRES = INSTALL_REQUIRES + [
 
 setup(
     name="feast_spark_offline_store",
-    version="0.0.3",
     author="Thijs Brits",
+    use_version_scm=True,
     description="Spark support for Feast offline store",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
@@ -33,4 +33,5 @@ setup(
     packages=find_packages(include=["feast_spark_offline_store"]),
     install_requires=INSTALL_REQUIRES,
     extras_require={"dev": DEV_REQUIRES},
+    setup_requires=["setuptools_scm"],
 )

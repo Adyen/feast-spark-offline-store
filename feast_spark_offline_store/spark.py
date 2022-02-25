@@ -1,24 +1,26 @@
-from typing import List, Union, Optional, Dict
-from pydantic import StrictStr
+import inspect
 from datetime import datetime
+from typing import List, Union, Optional, Dict, Tuple
 
-import pandas
-import pyspark
-import pyarrow
 import numpy as np
+import pandas
 import pandas as pd
+import pyarrow
+import pyspark
+from pydantic import StrictStr
+from pyspark import SparkConf
+from pyspark.sql import SparkSession
 from pytz import utc
 
-from feast.registry import Registry
 from feast import FeatureView, OnDemandFeatureView
 from feast.data_source import DataSource
-from feast.repo_config import FeastConfigBaseModel, RepoConfig
-from feast.infra.offline_stores.offline_store import OfflineStore, RetrievalJob
-from feast.infra.offline_stores import offline_utils
 from feast.errors import InvalidEntityType
+from feast.infra.offline_stores import offline_utils
+from feast.infra.offline_stores.offline_store import OfflineStore, RetrievalJob
+from feast.infra.offline_stores.offline_utils import FeatureViewQueryContext
+from feast.registry import Registry
+from feast.repo_config import FeastConfigBaseModel, RepoConfig
 
-from pyspark.sql import SparkSession
-from pyspark import SparkConf
 from feast_spark_offline_store.spark_source import SparkSource
 from feast_spark_offline_store.spark_type_map import spark_schema_to_np_dtypes
 
@@ -101,51 +103,66 @@ class SparkOfflineStore(OfflineStore):
         assert isinstance(config.offline_store, SparkOfflineStoreConfig)
 
         spark_session = get_spark_session_or_start_new_with_repoconfig(
-            config.offline_store
+            store_config=config.offline_store
         )
-
-        table_name = offline_utils.get_temp_entity_table_name()
+        tmp_entity_df_table_name = offline_utils.get_temp_entity_table_name()
 
         entity_schema = _upload_entity_df_and_get_entity_schema(
-            spark_session, table_name, entity_df
+            spark_session=spark_session,
+            table_name=tmp_entity_df_table_name,
+            entity_df=entity_df,
         )
-
-        entity_df_event_timestamp_col = (
-            offline_utils.infer_event_timestamp_from_entity_df(entity_schema)
+        event_timestamp_col = offline_utils.infer_event_timestamp_from_entity_df(
+            entity_schema=entity_schema,
         )
-
         expected_join_keys = offline_utils.get_expected_join_keys(
-            project, feature_views, registry
+            project=project, feature_views=feature_views, registry=registry
         )
-
         offline_utils.assert_expected_columns_in_entity_df(
-            entity_schema, expected_join_keys, entity_df_event_timestamp_col
+            entity_schema=entity_schema,
+            join_keys=expected_join_keys,
+            entity_df_event_timestamp_col=event_timestamp_col,
         )
-
-        query_context = offline_utils.get_feature_view_query_context(
-            feature_refs,
-            feature_views,
-            registry,
-            project,
+        query_context = _get_feature_view_query_context(
+            entity_df=entity_df,
+            entity_df_event_timestamp_col=event_timestamp_col,
+            feature_refs=feature_refs,
+            feature_views=feature_views,
+            spark_session=spark_session,
+            table_name=tmp_entity_df_table_name,
+            project=project,
+            registry=registry,
         )
-
         query = offline_utils.build_point_in_time_query(
-            query_context,
-            left_table_query_string=table_name,
-            entity_df_event_timestamp_col=entity_df_event_timestamp_col,
+            feature_view_query_contexts=query_context,
+            left_table_query_string=tmp_entity_df_table_name,
+            entity_df_event_timestamp_col=event_timestamp_col,
             entity_df_columns=entity_schema.keys(),
             query_template=MULTIPLE_FEATURE_VIEW_POINT_IN_TIME_JOIN,
             full_feature_names=full_feature_names,
+        )
+        on_demand_feature_views = OnDemandFeatureView.get_requested_odfvs(
+            feature_refs=feature_refs, project=project, registry=registry
         )
 
         return SparkRetrievalJob(
             spark_session=spark_session,
             query=query,
             full_feature_names=full_feature_names,
-            on_demand_feature_views=OnDemandFeatureView.get_requested_odfvs(
-                feature_refs, project, registry
-            ),
+            on_demand_feature_views=on_demand_feature_views,
         )
+
+    @staticmethod
+    def pull_all_from_table_or_query(
+        config: RepoConfig,
+        data_source: DataSource,
+        join_key_columns: List[str],
+        feature_name_columns: List[str],
+        event_timestamp_column: str,
+        start_date: datetime,
+        end_date: datetime,
+    ) -> RetrievalJob:
+        pass
 
 
 # TODO fix internal abstract methods _to_df_internal _to_arrow_internal
@@ -193,26 +210,12 @@ class SparkRetrievalJob(RetrievalJob):
         df = self.to_df()
         return pyarrow.Table.from_pandas(df)  # noqa
 
+    def persist(self, storage):  # omitted type for feast>0.17 backwards compatibility
+        pass
 
-def _upload_entity_df_and_get_entity_schema(
-    spark_session, table_name, entity_df
-) -> Dict[str, np.dtype]:
-    if isinstance(entity_df, pd.DataFrame):
-        spark_session.createDataFrame(entity_df).createOrReplaceTempView(table_name)
-        return dict(zip(entity_df.columns, entity_df.dtypes))
-    elif isinstance(entity_df, str):
-        spark_session.sql(entity_df).createOrReplaceTempView(table_name)
-        limited_entity_df = spark_session.table(table_name)
-        # limited_entity_df = spark_session.table(table_name).limit(1).toPandas()
-
-        return dict(
-            zip(
-                limited_entity_df.columns,
-                spark_schema_to_np_dtypes(limited_entity_df.dtypes),
-            )
-        )
-    else:
-        raise InvalidEntityType(type(entity_df))
+    @property
+    def metadata(self):  # omitted type for feast>0.17 backwards compatibility
+        pass
 
 
 def get_spark_session_or_start_new_with_repoconfig(
@@ -238,12 +241,111 @@ def get_spark_session_or_start_new_with_repoconfig(
     return spark_session
 
 
+def _upload_entity_df_and_get_entity_schema(
+    spark_session: SparkSession,
+    table_name: str,
+    entity_df: Union[pandas.DataFrame, str],
+) -> Dict[str, np.dtype]:
+    if isinstance(entity_df, pd.DataFrame):
+        spark_session.createDataFrame(entity_df).createOrReplaceTempView(table_name)
+        return dict(zip(entity_df.columns, entity_df.dtypes))
+    elif isinstance(entity_df, str):
+        spark_session.sql(entity_df).createOrReplaceTempView(table_name)
+        limited_entity_df = spark_session.table(table_name)
+        return dict(
+            zip(
+                limited_entity_df.columns,
+                spark_schema_to_np_dtypes(limited_entity_df.dtypes),
+            )
+        )
+    else:
+        raise InvalidEntityType(type(entity_df))
+
+
 def _format_datetime(t: datetime):
     # Since Hive does not support timezone, need to transform to utc.
     if t.tzinfo:
         t = t.astimezone(tz=utc)
     t = t.strftime("%Y-%m-%d %H:%M:%S.%f")
     return t
+
+
+def _get_entity_df_event_timestamp_range(
+    entity_df: Union[pd.DataFrame, str],
+    entity_df_event_timestamp_col: str,
+    spark_session: SparkSession,
+    table_name: str,
+) -> Tuple[datetime, datetime]:
+    if type(entity_df) is str:
+        result = spark_session.sql(
+            f"""
+            SELECT 
+                MIN({entity_df_event_timestamp_col}) AS min, 
+                MAX({entity_df_event_timestamp_col}) AS max 
+            FROM {table_name}
+            """
+        ).collect()
+        assert (
+            len(result) == 1
+        ), "Could not extract event timestamp range, perhaps entity_df is empty?"
+        entity_df_event_timestamp_range = (
+            result[0]["min"],
+            result[0]["max"],
+        )
+    elif isinstance(entity_df, pd.DataFrame):
+        entity_df_event_timestamp = entity_df.loc[
+            :, entity_df_event_timestamp_col
+        ].infer_objects()
+        if pd.api.types.is_string_dtype(entity_df_event_timestamp):
+            entity_df_event_timestamp = pd.to_datetime(
+                entity_df_event_timestamp, utc=True
+            )
+        entity_df_event_timestamp_range = (
+            entity_df_event_timestamp.min(),
+            entity_df_event_timestamp.max(),
+        )
+    else:
+        raise InvalidEntityType(type(entity_df))
+
+    return entity_df_event_timestamp_range
+
+
+def _get_feature_view_query_context(
+    entity_df: Union[pd.DataFrame, str],
+    entity_df_event_timestamp_col: str,
+    feature_refs: List[str],
+    feature_views: List[FeatureView],
+    spark_session: SparkSession,
+    table_name: str,
+    registry: Registry,
+    project: str,
+) -> List[FeatureViewQueryContext]:
+    # interface of offline_utils.get_feature_view_query_context changed in feast==0.17
+    arg_spec = inspect.getfullargspec(func=offline_utils.get_feature_view_query_context)
+    if "entity_df_timestamp_range" in arg_spec.args:
+        # for feast>=0.17
+        entity_df_timestamp_range = _get_entity_df_event_timestamp_range(
+            entity_df=entity_df,
+            entity_df_event_timestamp_col=entity_df_event_timestamp_col,
+            spark_session=spark_session,
+            table_name=table_name,
+        )
+        query_context = offline_utils.get_feature_view_query_context(
+            feature_refs=feature_refs,
+            feature_views=feature_views,
+            registry=registry,
+            project=project,
+            entity_df_timestamp_range=entity_df_timestamp_range,
+        )
+    else:
+        # for feast<0.17
+        query_context = offline_utils.get_feature_view_query_context(
+            feature_refs=feature_refs,
+            feature_views=feature_views,
+            registry=registry,
+            project=project,
+        )
+    return query_context
 
 
 MULTIPLE_FEATURE_VIEW_POINT_IN_TIME_JOIN = """/*
@@ -345,10 +447,11 @@ ON (
     {% endfor %}
 );
 
+---EOS---
+
 {% endfor %}
 -- End create temporary table *__base
 
----EOS---
 
 {% for featureview in featureviews %}
 
