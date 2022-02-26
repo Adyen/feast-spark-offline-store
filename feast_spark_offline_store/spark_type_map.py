@@ -13,6 +13,7 @@ def spark_to_feast_value_type(spark_type_as_str: str) -> ValueType:
         "string": ValueType.STRING,
         "int": ValueType.INT32,
         "bigint": ValueType.INT64,
+        "long": ValueType.INT64,
         "double": ValueType.DOUBLE,
         "float": ValueType.FLOAT,
         "boolean": ValueType.BOOL,
@@ -26,6 +27,9 @@ def spark_to_feast_value_type(spark_type_as_str: str) -> ValueType:
         "array<boolean>": ValueType.BOOL_LIST,
         "array<timestamp>": ValueType.UNIX_TIMESTAMP_LIST,
     }
+    #TODO: this is just incorrect fix
+    if(type(spark_type_as_str) != str or spark_type_as_str not in type_map):
+        return ValueType.NULL
     return type_map[spark_type_as_str.lower()]
 
 

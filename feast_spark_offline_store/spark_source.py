@@ -4,6 +4,10 @@ from feast.repo_config import RepoConfig
 from pyspark.sql.utils import AnalysisException
 from feast.value_type import ValueType
 from feast.protos.feast.core.DataSource_pb2 import DataSource as DataSourceProto
+from feast.protos.feast.core.SavedDataset_pb2 import (
+    SavedDatasetStorage as SavedDatasetStorageProto,
+)
+from feast.saved_dataset import SavedDatasetStorage
 from feast_spark_offline_store.spark_type_map import spark_to_feast_value_type
 import pickle
 from feast.errors import DataSourceNotFoundException
@@ -206,3 +210,25 @@ class SparkOptions:
         )
 
         return spark_options_proto
+
+
+class SavedDatasetSparkStorage(SavedDatasetStorage):
+    _proto_attr_name = "spark_storage"
+
+    spark_options: SparkOptions
+    def __init__(self, table_ref: str, query: str):
+        self.spark_options = SparkOptions(table=table_ref, query=query)
+
+    @staticmethod
+    def from_proto(storage_proto: SavedDatasetStorageProto) -> SavedDatasetStorage:
+        # options = SparkOptions.from_proto(
+        #         storage_proto
+        # )
+        # spark_options = SparkOptions(table=options.table, query=options.query)
+        return SavedDatasetSparkStorage(table="", query=None)
+
+    def to_proto(self) -> SavedDatasetStorageProto:
+        return SavedDatasetStorageProto()
+
+    def to_data_source(self) -> DataSource:
+        return SparkSource(table=self.spark_options.table)

@@ -11,7 +11,6 @@ from example_feature_repo.example import (
     customer_daily_profile_view,
 )
 
-
 def test_end_to_end_one_feature_view(feature_store: FeatureStore):
     try:
         # apply repository
@@ -37,7 +36,6 @@ def test_end_to_end_one_feature_view(feature_store: FeatureStore):
     finally:
         # tear down feature store
         feature_store.teardown()
-
 
 def test_end_to_end_multiple_feature_views(feature_store: FeatureStore):
     try:

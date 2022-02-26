@@ -8,7 +8,7 @@ venv
 /results.xml
 .hypothesis/
 buildvenv/
-
+feast/
 
 build/
 dist/
