@@ -1,3 +1,0 @@
-[submodule "feast"]
-	path = feast
-	url = git@github.com:jbvaningen/feast.git
