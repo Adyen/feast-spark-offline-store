@@ -47,12 +47,12 @@ class SparkOfflineStore(OfflineStore):
         start_date: datetime,
         end_date: datetime,
     ) -> RetrievalJob:
-        spark_session = get_spark_session_or_start_new_with_repoconfig(
-            config.offline_store
-        )
-
         assert isinstance(config.offline_store, SparkOfflineStoreConfig)
         assert isinstance(data_source, SparkSource)
+
+        spark_session = get_spark_session_or_start_new_with_repoconfig(
+            store_config=config.offline_store
+        )
 
         print("Pulling latest features from spark offline store")
 
@@ -221,8 +221,11 @@ class SparkRetrievalJob(RetrievalJob):
 def get_spark_session_or_start_new_with_repoconfig(
     store_config: SparkOfflineStoreConfig,
 ) -> SparkSession:
-    spark_session = SparkSession.getActiveSession()
+    assert isinstance(
+        store_config, SparkOfflineStoreConfig
+    ), "Wrong offline store config type"
 
+    spark_session = SparkSession.getActiveSession()
     if not spark_session:
         spark_builder = SparkSession.builder
         spark_conf = store_config.spark_conf
