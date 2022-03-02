@@ -84,10 +84,7 @@ def test_data(
     if worker_id == "master":
         # not executing in with multiple workers, just produce the data and let
         # pytest's fixture caching do its job
-        generate_example_data(
-            spark_session=spark_session,
-            base_dir=example_repo_path
-        )
+        generate_example_data(spark_session=spark_session, base_dir=example_repo_path)
         return
 
     # get the temp directory shared by all workers
@@ -99,8 +96,7 @@ def test_data(
             pass
         else:
             generate_example_data(
-                spark_session=spark_session,
-                base_dir=example_repo_path
+                spark_session=spark_session, base_dir=example_repo_path
             )
     return
 
