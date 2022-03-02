@@ -17,6 +17,7 @@ DEV_REQUIRES = INSTALL_REQUIRES + [
     "black",
     "flake8",
     "pytest>=6.2.5",
+    "filelock",
     "google",
 ]
 

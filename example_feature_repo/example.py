@@ -5,14 +5,14 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from google.protobuf.duration_pb2 import Duration
-from pyspark.sql import SparkSession
-
 from feast import Entity, Feature, FeatureView, ValueType
 from feast.driver_test_data import (
     create_driver_hourly_stats_df,
     create_customer_daily_profile_df,
 )
+from google.protobuf.duration_pb2 import Duration
+from pyspark.sql import SparkSession
+
 from feast_spark_offline_store import SparkSource
 
 # Constants related to the generated data sets
@@ -76,19 +76,25 @@ customer_daily_profile_view = FeatureView(
     tags={},
 )
 
-if __name__ == "__main__":
-    spark_session = SparkSession.builder.getOrCreate()
 
+def generate_example_data(spark_session: SparkSession, base_dir: str) -> None:
     spark_session.createDataFrame(
         data=create_driver_hourly_stats_df(driver_entities, start_date, end_date)
     ).write.parquet(
-        path=str(current_dir / "data" / "driver_hourly_stats"),
+        path=str(Path(base_dir) / "data" / "driver_hourly_stats"),
         mode="overwrite",
     )
 
     spark_session.createDataFrame(
         data=create_customer_daily_profile_df(customer_entities, start_date, end_date)
     ).write.parquet(
-        path=str(current_dir / "data" / "customer_daily_profile"),
+        path=str(Path(base_dir) / "data" / "customer_daily_profile"),
         mode="overwrite",
+    )
+
+
+if __name__ == "__main__":
+    generate_example_data(
+        spark_session=SparkSession.builder.getOrCreate(),
+        base_dir=str(current_dir),
     )

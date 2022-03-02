@@ -1,6 +1,7 @@
 import os
 
 import pandas as pd
+from feast import FeatureStore
 
 from example_feature_repo.example import (
     driver,
@@ -11,21 +12,18 @@ from example_feature_repo.example import (
     driver_entities,
     customer_entities,
 )
-from feast import FeatureStore
 
 
-def test_end_to_end_one_feature_view(feature_store: FeatureStore):
-    driver_id = driver_entities[0]
-    event_timestamp = end_date
+def test_end_to_end_one_feature_view(feature_store: FeatureStore, test_data):
     try:
         # apply repository
         feature_store.apply([driver, driver_hourly_stats_view])
 
         # load data into online store (uses offline stores pull_latest_from_table_or_query)
-        feature_store.materialize_incremental(end_date=event_timestamp)
+        feature_store.materialize_incremental(end_date=end_date)
 
         entity_df = pd.DataFrame(
-            {"driver_id": [driver_id], "event_timestamp": [event_timestamp]}
+            {"driver_id": [driver_entities[0]], "event_timestamp": [end_date]}
         )
 
         # Read features from offline store
@@ -43,10 +41,7 @@ def test_end_to_end_one_feature_view(feature_store: FeatureStore):
         feature_store.teardown()
 
 
-def test_end_to_end_multiple_feature_views(feature_store: FeatureStore):
-    event_timestamp = end_date
-    driver_id = driver_entities[0]
-    customer_id = customer_entities[0]
+def test_end_to_end_multiple_feature_views(feature_store: FeatureStore, test_data):
     try:
         # apply repository
         feature_store.apply(
@@ -54,13 +49,13 @@ def test_end_to_end_multiple_feature_views(feature_store: FeatureStore):
         )
 
         # load data into online store (uses offline stores pull_latest_from_table_or_query)
-        feature_store.materialize_incremental(end_date=event_timestamp)
+        feature_store.materialize_incremental(end_date=end_date)
 
         entity_df = pd.DataFrame(
             {
-                "driver_id": [driver_id],
-                "customer_id": [customer_id],
-                "event_timestamp": [event_timestamp],
+                "driver_id": [driver_entities[0]],
+                "customer_id": [customer_entities[0]],
+                "event_timestamp": [end_date],
             }
         )
 
@@ -87,15 +82,15 @@ def test_end_to_end_multiple_feature_views(feature_store: FeatureStore):
         feature_store.teardown()
 
 
-def test_cli(example_repo_path: str):
+def test_cli(example_repo_path: str, test_data):
     repo_path = example_repo_path
     output_file = f"{repo_path}/output.txt"
-    timestamp = end_date.strftime("%Y-%m-%dT%H:%M:%S")  # needs to be ISO format
     try:
         # Run apply
         os.system(f"PYTHONPATH=$PYTHONPATH:/$(pwd) feast --chdir {repo_path} apply")
 
         # Run materialize while piping stdout to a file
+        timestamp = end_date.strftime("%Y-%m-%dT%H:%M:%S")  # needs to be ISO format
         os.system(
             f"PYTHONPATH=$PYTHONPATH:/$(pwd) feast --chdir {repo_path} "
             f"materialize-incremental {timestamp} > {output_file}"
