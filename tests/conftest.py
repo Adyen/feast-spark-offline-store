@@ -10,7 +10,7 @@ from feast.repo_config import load_repo_config, RepoConfig
 from filelock import FileLock
 from pyspark.sql import SparkSession, DataFrame
 
-from example_feature_repo.example import generate_example_data
+from example_feature_repo.example import generate_example_data, example_data_exists
 from feast_spark_offline_store.spark import (
     get_spark_session_or_start_new_with_repoconfig,
 )
@@ -93,11 +93,10 @@ def test_data(
     fn = root_tmp_dir / "data.json"
     with FileLock(str(fn) + ".lock"):
         if fn.is_file():
-            pass
-        else:
-            generate_example_data(
-                spark_session=spark_session, base_dir=example_repo_path
-            )
+            return  # another worker is writing the test data, so don't write it
+        if example_data_exists(spark_session=spark_session, base_dir=example_repo_path):
+            return  # test data already exists, so don't write it
+        generate_example_data(spark_session=spark_session, base_dir=example_repo_path)
     return
 
 

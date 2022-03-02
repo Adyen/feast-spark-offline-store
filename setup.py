@@ -13,12 +13,14 @@ INSTALL_REQUIRES = [
 ]
 
 DEV_REQUIRES = INSTALL_REQUIRES + [
-    "wheel",
     "black",
-    "flake8",
-    "pytest>=6.2.5",
     "filelock",
+    "flake8",
     "google",
+    "pytest>=6.2.5",
+    "pytest-xdist>=2.5.0",
+    "setuptools_scm",
+    "wheel",
 ]
 
 setup(

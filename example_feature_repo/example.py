@@ -77,6 +77,16 @@ customer_daily_profile_view = FeatureView(
 )
 
 
+def example_data_exists(spark_session: SparkSession, base_dir: str) -> bool:
+    for path in [
+        Path(base_dir) / "data" / "driver_hourly_stats",
+        Path(base_dir) / "data" / "customer_daily_profile",
+    ]:
+        if not path.exists():
+            return False
+    return True
+
+
 def generate_example_data(spark_session: SparkSession, base_dir: str) -> None:
     spark_session.createDataFrame(
         data=create_driver_hourly_stats_df(driver_entities, start_date, end_date)
