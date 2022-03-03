@@ -1,8 +1,9 @@
+from collections import defaultdict
 from typing import Dict, List, Tuple, Iterator
 
-from feast import ValueType
-from collections import defaultdict
 from numpy import dtype
+
+from feast import ValueType
 
 
 def spark_to_feast_value_type(spark_type_as_str: str) -> ValueType:
@@ -32,7 +33,6 @@ def spark_to_feast_value_type(spark_type_as_str: str) -> ValueType:
 def spark_schema_to_np_dtypes(dtypes: List[Tuple[str, str]]) -> Iterator[dtype]:
     # TODO recheck all typing (also tz for timestamp)
     # https://spark.apache.org/docs/latest/api/python/user_guide/arrow_pandas.html#timestamp-with-time-zone-semantics
-
     type_map = defaultdict(
         lambda: dtype("O"),
         {
@@ -45,5 +45,4 @@ def spark_schema_to_np_dtypes(dtypes: List[Tuple[str, str]]) -> Iterator[dtype]:
             "timestamp": dtype("datetime64[ns]"),
         },
     )
-
     return (type_map[t] for _, t in dtypes)
