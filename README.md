@@ -1,4 +1,8 @@
 # Feast Spark Offline Store plugin
+
+| :exclamation:  Further development is discontinued. In collaboration with the Feast community this repo is now added to the main project. From v0.19 https://github.com/feast-dev/feast/pull/2349  |
+|-----------------------------------------|
+
 This repo contains a plugin for [feast](https://github.com/feast-dev/feast) to run an offline store on Spark. 
 It can be installed from pip and configured in the `feature_store.yaml` configuration file to interface with `DataSources` using Spark.
 
